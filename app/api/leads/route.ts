@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getSupabase } from "@/lib/supabase";
 
 /**
  * Schéma de validation du lead.
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
     }
 
     const lead = result.data;
+    const userAgent = request.headers.get("user-agent") ?? "";
 
     // 2. Enrichissement du lead (métadonnées utiles pour le CRM / les relances)
     const payload = {
@@ -41,10 +43,28 @@ export async function POST(request: Request) {
       source: "Landing Tunnel de Vente",
       structure: "GENIE MULTI-SERVICES",
       receivedAt: new Date().toISOString(),
-      userAgent: request.headers.get("user-agent") ?? "",
+      userAgent,
     };
 
-    // 3. Envoi vers un webhook externe (n8n, Zapier, Make...) si configuré.
+    // 3. Enregistrement dans Supabase (si configuré).
+    const supabase = getSupabase();
+    if (supabase) {
+      const { error: dbError } = await supabase.from("leads").insert({
+        nom: lead.nom,
+        email: lead.email,
+        telephone: lead.telephone,
+        service: lead.service || null,
+        source: "Landing Tunnel de Vente",
+        user_agent: userAgent,
+      });
+
+      if (dbError) {
+        // On loggue mais on n'échoue pas tout de suite : on tente quand même le webhook.
+        console.error("[leads] Échec insertion Supabase :", dbError.message);
+      }
+    }
+
+    // 4. Envoi vers un webhook externe (n8n, Zapier, Make...) si configuré.
     //    Définir LEADS_WEBHOOK_URL dans .env.local pour activer les relances
     //    automatiques (email + WhatsApp).
     const webhookUrl = process.env.LEADS_WEBHOOK_URL;
@@ -66,12 +86,12 @@ export async function POST(request: Request) {
       } catch (webhookErr) {
         console.error("[leads] Échec de l'appel webhook :", webhookErr);
       }
-    } else {
-      // Pas de webhook configuré : on loggue simplement le lead côté serveur
-      console.log("[leads] Nouveau lead (aucun webhook configuré) :", payload);
+    } else if (!supabase) {
+      // Ni Supabase ni webhook configurés : on loggue le lead côté serveur
+      console.log("[leads] Nouveau lead (aucune destination configurée) :", payload);
     }
 
-    // 4. Réponse de succès
+    // 5. Réponse de succès
     return NextResponse.json(
       { success: true, message: "Lead enregistré avec succès." },
       { status: 201 }
