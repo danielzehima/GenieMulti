@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSupabase } from "@/lib/supabase";
+import { notifyWhatsApp } from "@/lib/notify";
+import { notifyTeamByEmail, sendProspectAck } from "@/lib/email";
 
 /**
  * Schéma de validation du lead.
@@ -64,7 +66,17 @@ export async function POST(request: Request) {
       }
     }
 
-    // 4. Envoi vers un webhook externe (n8n, Zapier, Make...) si configuré.
+    // 4. Notifications (toutes optionnelles et non-bloquantes) :
+    //    - email à l'équipe + accusé de réception au prospect (Resend)
+    //    - notification WhatsApp à l'équipe (CallMeBot)
+    //    On les lance en parallèle sans bloquer la réponse en cas d'échec.
+    await Promise.allSettled([
+      notifyTeamByEmail(lead),
+      sendProspectAck(lead),
+      notifyWhatsApp(lead),
+    ]);
+
+    // 5. Envoi vers un webhook externe (n8n, Zapier, Make...) si configuré.
     //    Définir LEADS_WEBHOOK_URL dans .env.local pour activer les relances
     //    automatiques (email + WhatsApp).
     const webhookUrl = process.env.LEADS_WEBHOOK_URL;
@@ -91,7 +103,7 @@ export async function POST(request: Request) {
       console.log("[leads] Nouveau lead (aucune destination configurée) :", payload);
     }
 
-    // 5. Réponse de succès
+    // 6. Réponse de succès
     return NextResponse.json(
       { success: true, message: "Lead enregistré avec succès." },
       { status: 201 }
