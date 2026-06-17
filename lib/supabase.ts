@@ -14,9 +14,11 @@ export function getSupabase(): SupabaseClient | null {
   if (cached) return cached;
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  // Clé publique (anon / publishable) — sûre à utiliser côté serveur.
-  // Les insertions sont autorisées via une policy RLS dédiée.
-  const key = process.env.SUPABASE_ANON_KEY;
+  // On privilégie la clé service_role (secrète, serveur uniquement) qui
+  // contourne le RLS — pratique pour insérer sans dépendre d'une policy.
+  // À défaut, on utilise la clé anon (nécessite alors une policy d'insertion).
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
   if (!url || !key) return null;
 
