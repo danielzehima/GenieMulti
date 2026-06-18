@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSupabase } from "@/lib/supabase";
 import { notifyWhatsApp } from "@/lib/notify";
 import { notifyTeamByEmail, sendProspectAck } from "@/lib/email";
+import { appendToGoogleSheet } from "@/lib/gsheet";
 
 /**
  * Schéma de validation du lead.
@@ -74,6 +75,7 @@ export async function POST(request: Request) {
       notifyTeamByEmail(lead),
       sendProspectAck(lead),
       notifyWhatsApp(lead),
+      appendToGoogleSheet(lead),
     ]);
 
     // 5. Envoi vers un webhook externe (n8n, Zapier, Make...) si configuré.
