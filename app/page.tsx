@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import LeadForm from "@/components/LeadForm";
 import LeadModal from "@/components/LeadModal";
+import Faq from "@/components/Faq";
 
 // Numéro WhatsApp de la structure (à personnaliser)
 // Coordonnées de la structure GENIE MULTI-SERVICES
@@ -133,6 +134,7 @@ export default function Home() {
             <a href="#services" className="transition hover:text-sky-500">Services</a>
             <a href="#avis" className="transition hover:text-sky-500">Avis</a>
             <a href="#autres" className="transition hover:text-sky-500">Autres expertises</a>
+            <a href="#faq" className="transition hover:text-sky-500">FAQ</a>
           </nav>
 
           <button
@@ -390,6 +392,9 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* ===================== FAQ ===================== */}
+      <Faq />
 
       {/* ===================== CTA FINAL + FORMULAIRE ===================== */}
       <section className="relative overflow-hidden bg-gradient-to-br from-sky-600 to-sky-800">
