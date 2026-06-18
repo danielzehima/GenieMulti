@@ -9,7 +9,11 @@ Méthode : un **Google Apps Script** déployé en "Web App". Aucun compte de ser
 
 ## Étape 2 — Ouvrir Apps Script
 1. Dans la feuille : menu **Extensions → Apps Script**
-2. Supprime le code par défaut, et colle le script ci-dessous :
+2. Supprime le code par défaut, et colle le script ci-dessous.
+
+> ⚠️ **NE COPIE PAS** la ligne d'ouverture ` ```javascript ` ni la ligne de fermeture ` ``` `.
+> La **première ligne** de ton Code.gs doit être `const TOKEN = "genie2026";`.
+> (Si la 1ʳᵉ ligne est le mot `javascript`, tu auras l'erreur `ReferenceError: javascript is not defined`.)
 
 ```javascript
 // Doit correspondre à GSHEET_TOKEN dans .env.local
